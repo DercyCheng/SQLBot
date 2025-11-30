@@ -153,19 +153,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus } from '@element-plus/icons-vue'
-import {
-  getScheduledTasks,
-  createScheduledTask,
-  updateScheduledTask,
-  deleteScheduledTasks,
-  toggleTaskEnabled,
-  runTaskNow,
-  type ScheduledTaskInfo
-} from '@/api/scheduler'
+import { schedulerApi, type ScheduledTaskInfo } from '@/api/scheduler'
 
 const { t } = useI18n()
 
@@ -207,11 +199,11 @@ const formRules = {
 const loadTasks = async () => {
   loading.value = true
   try {
-    const res = await getScheduledTasks(currentPage.value, pageSize.value, {
+    const res = await schedulerApi.getTasks(currentPage.value, pageSize.value, {
       name: searchName.value || undefined
     })
-    taskList.value = res.data.data
-    totalCount.value = res.data.total_count
+    taskList.value = res.data?.data || []
+    totalCount.value = res.data?.total_count || 0
   } finally {
     loading.value = false
   }
@@ -304,10 +296,10 @@ const submitForm = async () => {
   }
 
   if (isEdit.value && taskForm.id) {
-    await updateScheduledTask(taskForm.id, taskForm)
+    await schedulerApi.updateTask(taskForm.id, taskForm)
     ElMessage.success(t('common.update_success'))
   } else {
-    await createScheduledTask(taskForm)
+    await schedulerApi.createTask(taskForm)
     ElMessage.success(t('common.save_success'))
   }
   dialogVisible.value = false
@@ -316,7 +308,7 @@ const submitForm = async () => {
 
 const toggleEnabled = async (task: ScheduledTaskInfo) => {
   if (task.id) {
-    await toggleTaskEnabled(task.id, task.enabled!)
+    await schedulerApi.toggleEnabled(task.id, task.enabled!)
   }
 }
 
@@ -326,7 +318,7 @@ const runNow = async (task: ScheduledTaskInfo) => {
     t('common.confirm')
   )
   if (task.id) {
-    await runTaskNow(task.id)
+    await schedulerApi.runNow(task.id)
     ElMessage.success('Task execution triggered')
     loadTasks()
   }
@@ -338,7 +330,7 @@ const deleteTask = async (task: ScheduledTaskInfo) => {
     t('common.confirm')
   )
   if (task.id) {
-    await deleteScheduledTasks([task.id])
+    await schedulerApi.deleteTasks([task.id])
     ElMessage.success(t('dashboard.delete_success'))
     loadTasks()
   }

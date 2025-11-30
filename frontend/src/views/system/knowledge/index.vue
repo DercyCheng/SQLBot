@@ -193,23 +193,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus, Upload, MoreFilled } from '@element-plus/icons-vue'
-import {
-  getKnowledgeBases,
-  getKnowledgeBase,
-  createKnowledgeBase,
-  updateKnowledgeBase,
-  deleteKnowledgeBases,
-  getDocuments,
-  uploadDocument,
-  deleteDocuments,
-  reprocessDocument,
-  type KnowledgeBaseInfo,
-  type DocumentInfo
-} from '@/api/knowledgeBase'
+import { knowledgeBaseApi, type KnowledgeBaseInfo, type DocumentInfo } from '@/api/knowledgeBase'
 
 const { t } = useI18n()
 
@@ -251,8 +239,8 @@ const uploadRef = ref()
 const loadKnowledgeBases = async () => {
   kbLoading.value = true
   try {
-    const res = await getKnowledgeBases(1, 100, { name: searchKb.value || undefined })
-    kbList.value = res.data.data
+    const res = await knowledgeBaseApi.page(1, 100, { name: searchKb.value || undefined })
+    kbList.value = res.data?.data || []
     if (kbList.value.length > 0 && !selectedKb.value) {
       selectKb(kbList.value[0])
     }
@@ -272,14 +260,14 @@ const loadDocuments = async () => {
   
   docLoading.value = true
   try {
-    const res = await getDocuments(
+    const res = await knowledgeBaseApi.getDocuments(
       selectedKb.value.id,
       docCurrentPage.value,
       docPageSize.value,
       { name: searchDoc.value || undefined }
     )
-    docList.value = res.data.data
-    docTotalCount.value = res.data.total_count
+    docList.value = res.data?.data || []
+    docTotalCount.value = res.data?.total_count || 0
   } finally {
     docLoading.value = false
   }
@@ -316,7 +304,7 @@ const handleKbCommand = async (command: string, kb: KnowledgeBaseInfo) => {
       t('common.confirm')
     )
     if (kb.id) {
-      await deleteKnowledgeBases([kb.id])
+      await knowledgeBaseApi.delete([kb.id])
       ElMessage.success(t('dashboard.delete_success'))
       if (selectedKb.value?.id === kb.id) {
         selectedKb.value = null
@@ -330,10 +318,10 @@ const submitKbForm = async () => {
   await kbFormRef.value?.validate()
 
   if (isEditKb.value && kbForm.id) {
-    await updateKnowledgeBase(kbForm.id, kbForm)
+    await knowledgeBaseApi.update(kbForm.id, kbForm)
     ElMessage.success(t('common.update_success'))
   } else {
-    await createKnowledgeBase(kbForm)
+    await knowledgeBaseApi.create(kbForm)
     ElMessage.success(t('common.save_success'))
   }
   kbDialogVisible.value = false
@@ -353,7 +341,7 @@ const uploadFile = async (options: any) => {
   if (!selectedKb.value?.id) return
   
   try {
-    await uploadDocument(selectedKb.value.id, options.file)
+    await knowledgeBaseApi.uploadDocument(selectedKb.value.id, options.file)
     ElMessage.success(t('knowledgeBase.upload_success'))
     loadDocuments()
   } catch (error) {
@@ -364,7 +352,7 @@ const uploadFile = async (options: any) => {
 const reprocessDoc = async (doc: DocumentInfo) => {
   if (!selectedKb.value?.id || !doc.id) return
   
-  await reprocessDocument(selectedKb.value.id, doc.id)
+  await knowledgeBaseApi.reprocessDocument(selectedKb.value.id, doc.id)
   ElMessage.success(t('knowledgeBase.processing_started'))
   loadDocuments()
 }
@@ -376,7 +364,7 @@ const deleteDoc = async (doc: DocumentInfo) => {
     t('knowledgeBase.confirm_delete_doc', { msg: '1' }),
     t('common.confirm')
   )
-  await deleteDocuments(selectedKb.value.id, [doc.id])
+  await knowledgeBaseApi.deleteDocuments(selectedKb.value.id, [doc.id])
   ElMessage.success(t('dashboard.delete_success'))
   loadDocuments()
 }

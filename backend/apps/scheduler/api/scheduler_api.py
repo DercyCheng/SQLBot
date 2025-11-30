@@ -145,6 +145,21 @@ async def delete_tasks(
     return {"deleted": count, "message": f"Deleted {count} tasks"}
 
 
+@router.post("/tasks/batch-delete")
+async def batch_delete_tasks(
+    session: SessionDep,
+    current_user: CurrentUser,
+    task_ids: list[int]
+):
+    """Batch delete scheduled tasks (POST method for frontend compatibility)"""
+    # Remove from scheduler
+    for task_id in task_ids:
+        scheduler_service.remove_task(task_id)
+    
+    count = delete_scheduled_task(session, task_ids, current_user.oid)
+    return {"deleted": count, "message": f"Deleted {count} tasks"}
+
+
 @router.post("/tasks/{task_id}/enable/{enabled}")
 async def toggle_task_enabled(
     session: SessionDep,

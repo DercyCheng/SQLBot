@@ -1,190 +1,116 @@
-import request from '@/utils/request'
+import { request } from '@/utils/request'
 
 // ==================== Knowledge Base APIs ====================
 
 export interface KnowledgeBaseInfo {
-    id?: number
-    name: string
-    description?: string
-    embedding_model?: string
-    chunk_size?: number
-    chunk_overlap?: number
-    chunking_strategy?: string
-    similarity_threshold?: number
-    top_k?: number
-    datasource_ids?: number[]
-    enabled?: boolean
-    document_count?: number
-    chunk_count?: number
-    create_time?: string
-    update_time?: string
+  id?: number
+  name: string
+  description?: string
+  embedding_model?: string
+  chunk_size?: number
+  chunk_overlap?: number
+  chunking_strategy?: string
+  similarity_threshold?: number
+  top_k?: number
+  datasource_ids?: number[]
+  enabled?: boolean
+  document_count?: number
+  chunk_count?: number
+  create_time?: string
+  update_time?: string
 }
 
 export interface DocumentInfo {
-    id?: number
-    kb_id: number
-    name: string
-    original_filename: string
-    file_size?: number
-    file_type: string
-    mime_type?: string
-    index_status: string
-    chunk_count?: number
-    error_message?: string
-    metadata?: Record<string, any>
-    enabled?: boolean
-    create_time?: string
-    update_time?: string
-    processed_time?: string
+  id?: number
+  kb_id: number
+  name: string
+  original_filename: string
+  file_size?: number
+  file_type: string
+  mime_type?: string
+  index_status: string
+  chunk_count?: number
+  error_message?: string
+  metadata?: Record<string, any>
+  enabled?: boolean
+  create_time?: string
+  update_time?: string
+  processed_time?: string
 }
 
 export interface SearchResult {
-    chunk_id: number
-    document_id: number
-    document_name: string
-    kb_id: number
-    kb_name: string
-    content: string
-    score: number
-    page_number?: number
-    metadata?: Record<string, any>
+  chunk_id: number
+  document_id: number
+  document_name: string
+  kb_id: number
+  kb_name: string
+  content: string
+  score: number
+  page_number?: number
+  metadata?: Record<string, any>
 }
 
-// Get all knowledge bases
-export const getAllKnowledgeBases = () => {
-    return request({
-        url: '/api/v1/system/knowledge-base/list',
-        method: 'get'
-    })
+const buildQueryString = (params?: Record<string, any>): string => {
+  if (!params) return ''
+  const searchParams = new URLSearchParams()
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      searchParams.append(key, String(value))
+    }
+  })
+  const queryString = searchParams.toString()
+  return queryString ? `?${queryString}` : ''
 }
 
-// Get paginated knowledge bases
-export const getKnowledgeBases = (
-    currentPage: number,
-    pageSize: number,
-    params?: { name?: string }
-) => {
-    return request({
-        url: `/api/v1/system/knowledge-base/page/${currentPage}/${pageSize}`,
-        method: 'get',
-        params
-    })
-}
+export const knowledgeBaseApi = {
+  // Get all knowledge bases
+  list: () => request.get('/system/knowledge-base/list'),
 
-// Get knowledge base detail
-export const getKnowledgeBase = (kbId: number) => {
-    return request({
-        url: `/api/v1/system/knowledge-base/${kbId}`,
-        method: 'get'
-    })
-}
+  // Get paginated knowledge bases
+  page: (currentPage: number, pageSize: number, params?: { name?: string }) =>
+    request.get(`/system/knowledge-base/page/${currentPage}/${pageSize}${buildQueryString(params)}`),
 
-// Create knowledge base
-export const createKnowledgeBase = (data: KnowledgeBaseInfo) => {
-    return request({
-        url: '/api/v1/system/knowledge-base',
-        method: 'post',
-        data
-    })
-}
+  // Get knowledge base detail
+  get: (kbId: number) => request.get(`/system/knowledge-base/${kbId}`),
 
-// Update knowledge base
-export const updateKnowledgeBase = (kbId: number, data: KnowledgeBaseInfo) => {
-    return request({
-        url: `/api/v1/system/knowledge-base/${kbId}`,
-        method: 'put',
-        data
-    })
-}
+  // Create knowledge base
+  create: (data: KnowledgeBaseInfo) => request.post('/system/knowledge-base', data),
 
-// Delete knowledge bases
-export const deleteKnowledgeBases = (kbIds: number[]) => {
-    return request({
-        url: '/api/v1/system/knowledge-base',
-        method: 'delete',
-        data: kbIds
-    })
-}
+  // Update knowledge base
+  update: (kbId: number, data: KnowledgeBaseInfo) => request.put(`/system/knowledge-base/${kbId}`, data),
 
-// Get documents in a knowledge base
-export const getDocuments = (
-    kbId: number,
-    currentPage: number,
-    pageSize: number,
-    params?: { name?: string; status?: string }
-) => {
-    return request({
-        url: `/api/v1/system/knowledge-base/${kbId}/documents/page/${currentPage}/${pageSize}`,
-        method: 'get',
-        params
-    })
-}
+  // Delete knowledge bases
+  delete: (kbIds: number[]) => request.post('/system/knowledge-base/batch-delete', kbIds),
 
-// Upload document
-export const uploadDocument = (kbId: number, file: File) => {
-    const formData = new FormData()
-    formData.append('file', file)
-    return request({
-        url: `/api/v1/system/knowledge-base/${kbId}/documents/upload`,
-        method: 'post',
-        headers: {
-            'Content-Type': 'multipart/form-data'
-        },
-        data: formData
-    })
-}
+  // Get documents in a knowledge base
+  getDocuments: (kbId: number, currentPage: number, pageSize: number, params?: { name?: string; status?: string }) =>
+    request.get(`/system/knowledge-base/${kbId}/documents/page/${currentPage}/${pageSize}${buildQueryString(params)}`),
 
-// Batch upload documents
-export const batchUploadDocuments = (kbId: number, files: File[]) => {
-    const formData = new FormData()
-    files.forEach(file => {
-        formData.append('files', file)
-    })
-    return request({
-        url: `/api/v1/system/knowledge-base/${kbId}/documents/batch-upload`,
-        method: 'post',
-        headers: {
-            'Content-Type': 'multipart/form-data'
-        },
-        data: formData
-    })
-}
+  // Upload document
+  uploadDocument: (kbId: number, file: File) => request.upload(`/system/knowledge-base/${kbId}/documents/upload`, file),
 
-// Delete documents
-export const deleteDocuments = (kbId: number, docIds: number[]) => {
-    return request({
-        url: `/api/v1/system/knowledge-base/${kbId}/documents`,
-        method: 'delete',
-        data: docIds
-    })
-}
+  // Batch upload documents - upload one by one
+  batchUpload: async (kbId: number, files: File[]) => {
+    const results = []
+    for (const file of files) {
+      const result = await request.upload(`/system/knowledge-base/${kbId}/documents/upload`, file)
+      results.push(result)
+    }
+    return results
+  },
 
-// Reprocess document
-export const reprocessDocument = (kbId: number, docId: number) => {
-    return request({
-        url: `/api/v1/system/knowledge-base/${kbId}/documents/${docId}/reprocess`,
-        method: 'post'
-    })
-}
+  // Delete documents
+  deleteDocuments: (kbId: number, docIds: number[]) =>
+    request.post(`/system/knowledge-base/${kbId}/documents/batch-delete`, docIds),
 
-// Search knowledge bases
-export const searchKnowledgeBase = (data: {
-    query: string
-    kb_ids: number[]
-    top_k?: number
-    similarity_threshold?: number
-}) => {
-    return request({
-        url: '/api/v1/system/knowledge-base/search',
-        method: 'post',
-        data
-    })
-}
+  // Reprocess document
+  reprocessDocument: (kbId: number, docId: number) =>
+    request.post(`/system/knowledge-base/${kbId}/documents/${docId}/reprocess`),
 
-// Get supported document types
-export const getSupportedTypes = () => {
-    return request({
-        url: '/api/v1/system/knowledge-base/supported-types',
-        method: 'get'
-    })
+  // Search knowledge bases
+  search: (data: { query: string; kb_ids: number[]; top_k?: number; similarity_threshold?: number }) =>
+    request.post('/system/knowledge-base/search', data),
+
+  // Get supported document types
+  getSupportedTypes: () => request.get('/system/knowledge-base/supported-types'),
 }

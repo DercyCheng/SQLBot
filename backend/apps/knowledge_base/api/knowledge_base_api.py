@@ -162,6 +162,17 @@ async def delete_kbs(
     return {"deleted": count, "message": f"Deleted {count} knowledge bases"}
 
 
+@router.post("/batch-delete")
+async def batch_delete_kbs(
+    session: SessionDep,
+    current_user: CurrentUser,
+    kb_ids: List[int]
+):
+    """Batch delete knowledge bases (POST method for frontend compatibility)"""
+    count = delete_knowledge_base(session, kb_ids, current_user.oid)
+    return {"deleted": count, "message": f"Deleted {count} knowledge bases"}
+
+
 # ==================== Document Endpoints ====================
 
 @router.get("/{kb_id}/documents/page/{current_page}/{page_size}")
@@ -382,6 +393,18 @@ async def delete_docs(
     doc_ids: List[int]
 ):
     """Delete documents from knowledge base"""
+    count = delete_documents(session, doc_ids, current_user.oid)
+    return {"deleted": count, "message": f"Deleted {count} documents"}
+
+
+@router.post("/{kb_id}/documents/batch-delete")
+async def batch_delete_docs(
+    session: SessionDep,
+    current_user: CurrentUser,
+    kb_id: int,
+    doc_ids: List[int]
+):
+    """Batch delete documents (POST method for frontend compatibility)"""
     count = delete_documents(session, doc_ids, current_user.oid)
     return {"deleted": count, "message": f"Deleted {count} documents"}
 

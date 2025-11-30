@@ -1,128 +1,79 @@
-import request from '@/utils/request'
+import { request } from '@/utils/request'
 
 // ==================== Scheduled Task APIs ====================
 
 export interface ScheduledTaskInfo {
-    id?: number
-    name: string
-    description?: string
-    task_type: string // 'cron' | 'interval' | 'date'
-    cron_expression?: string
-    interval_seconds?: number
-    scheduled_date?: string
-    action_type: string // 'http_request' | 'sql_query' | 'python_script'
-    action_config?: Record<string, any>
-    enabled?: boolean
-    max_retries?: number
-    retry_delay?: number
-    status?: string
-    last_run_time?: string
-    next_run_time?: string
-    create_time?: string
-    update_time?: string
+  id?: number
+  name: string
+  description?: string
+  task_type: string // 'cron' | 'interval' | 'date'
+  cron_expression?: string
+  interval_seconds?: number
+  scheduled_date?: string
+  action_type: string // 'http_request' | 'sql_query' | 'python_script'
+  action_config?: Record<string, any>
+  enabled?: boolean
+  max_retries?: number
+  retry_delay?: number
+  status?: string
+  last_run_time?: string
+  next_run_time?: string
+  create_time?: string
+  update_time?: string
 }
 
 export interface TaskLogInfo {
-    id?: number
-    task_id: number
-    task_name?: string
-    start_time?: string
-    end_time?: string
-    duration_ms?: number
-    status: string
-    result?: string
-    error_message?: string
-    retry_count?: number
+  id?: number
+  task_id: number
+  task_name?: string
+  start_time?: string
+  end_time?: string
+  duration_ms?: number
+  status: string
+  result?: string
+  error_message?: string
+  retry_count?: number
 }
 
-// Get paginated scheduled tasks
-export const getScheduledTasks = (
-    currentPage: number,
-    pageSize: number,
-    params?: {
-        name?: string
-        task_type?: string
-        status?: string
+const buildQueryString = (params?: Record<string, any>): string => {
+  if (!params) return ''
+  const searchParams = new URLSearchParams()
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      searchParams.append(key, String(value))
     }
-) => {
-    return request({
-        url: `/api/v1/system/scheduler/tasks/page/${currentPage}/${pageSize}`,
-        method: 'get',
-        params
-    })
+  })
+  const queryString = searchParams.toString()
+  return queryString ? `?${queryString}` : ''
 }
 
-// Get task detail
-export const getScheduledTask = (taskId: number) => {
-    return request({
-        url: `/api/v1/system/scheduler/tasks/${taskId}`,
-        method: 'get'
-    })
-}
+export const schedulerApi = {
+  // Get paginated scheduled tasks
+  getTasks: (currentPage: number, pageSize: number, params?: { name?: string; task_type?: string; status?: string }) =>
+    request.get(`/system/scheduler/tasks/page/${currentPage}/${pageSize}${buildQueryString(params)}`),
 
-// Create task
-export const createScheduledTask = (data: ScheduledTaskInfo) => {
-    return request({
-        url: '/api/v1/system/scheduler/tasks',
-        method: 'post',
-        data
-    })
-}
+  // Get task detail
+  getTask: (taskId: number) => request.get(`/system/scheduler/tasks/${taskId}`),
 
-// Update task
-export const updateScheduledTask = (taskId: number, data: ScheduledTaskInfo) => {
-    return request({
-        url: `/api/v1/system/scheduler/tasks/${taskId}`,
-        method: 'put',
-        data
-    })
-}
+  // Create task
+  createTask: (data: ScheduledTaskInfo) => request.post('/system/scheduler/tasks', data),
 
-// Delete tasks
-export const deleteScheduledTasks = (taskIds: number[]) => {
-    return request({
-        url: '/api/v1/system/scheduler/tasks',
-        method: 'delete',
-        data: taskIds
-    })
-}
+  // Update task
+  updateTask: (taskId: number, data: ScheduledTaskInfo) => request.put(`/system/scheduler/tasks/${taskId}`, data),
 
-// Toggle task enabled
-export const toggleTaskEnabled = (taskId: number, enabled: boolean) => {
-    return request({
-        url: `/api/v1/system/scheduler/tasks/${taskId}/enable/${enabled}`,
-        method: 'post'
-    })
-}
+  // Delete tasks
+  deleteTasks: (taskIds: number[]) => request.post('/system/scheduler/tasks/batch-delete', taskIds),
 
-// Run task immediately
-export const runTaskNow = (taskId: number) => {
-    return request({
-        url: `/api/v1/system/scheduler/tasks/${taskId}/run`,
-        method: 'post'
-    })
-}
+  // Toggle task enabled
+  toggleEnabled: (taskId: number, enabled: boolean) => request.post(`/system/scheduler/tasks/${taskId}/enable/${enabled}`),
 
-// Get task logs
-export const getTaskLogs = (
-    currentPage: number,
-    pageSize: number,
-    params?: {
-        task_id?: number
-        status?: string
-    }
-) => {
-    return request({
-        url: `/api/v1/system/scheduler/logs/page/${currentPage}/${pageSize}`,
-        method: 'get',
-        params
-    })
-}
+  // Run task immediately
+  runNow: (taskId: number) => request.post(`/system/scheduler/tasks/${taskId}/run`),
 
-// Get scheduler status
-export const getSchedulerStatus = () => {
-    return request({
-        url: '/api/v1/system/scheduler/status',
-        method: 'get'
-    })
+  // Get task logs
+  getLogs: (currentPage: number, pageSize: number, params?: { task_id?: number; status?: string }) =>
+    request.get(`/system/scheduler/logs/page/${currentPage}/${pageSize}${buildQueryString(params)}`),
+
+  // Get scheduler status
+  getStatus: () => request.get('/system/scheduler/status'),
 }
