@@ -23,6 +23,8 @@ import Authentication from '@/views/system/authentication/index.vue'
 import Permission from '@/views/system/permission/index.vue'
 import User from '@/views/system/user/User.vue'
 import Workspace from '@/views/system/workspace/index.vue'
+import Scheduler from '@/views/system/scheduler/index.vue'
+import KnowledgeBase from '@/views/system/knowledge/index.vue'
 import Page401 from '@/views/error/index.vue'
 import { i18n } from '@/i18n'
 import { watchRouter } from './watch'
@@ -128,6 +130,12 @@ export const routes = [
         component: Prompt,
         meta: { title: t('prompt.customize_prompt_words') },
       },
+      {
+        path: '/set/knowledge',
+        name: 'knowledge',
+        component: KnowledgeBase,
+        meta: { title: t('knowledgeBase.title') },
+      },
     ],
   },
   {
@@ -201,6 +209,12 @@ export const routes = [
             name: 'authentication',
             component: Authentication,
             meta: { title: t('system.authentication_settings') },
+          },
+          {
+            path: 'scheduler',
+            name: 'scheduler',
+            component: Scheduler,
+            meta: { title: t('scheduler.title') },
           },
         ],
       },

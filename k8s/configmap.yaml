@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sqlbot-config
+  namespace: sqlbot
+  labels:
+    app.kubernetes.io/name: sqlbot
+    app.kubernetes.io/component: config
+data:
+  # Database configuration
+  POSTGRES_SERVER: "postgres-service"
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: "sqlbot"
+  POSTGRES_USER: "root"
+
+  # Redis configuration
+  CACHE_TYPE: "redis"
+  CACHE_REDIS_URL: "redis://redis-service:6379/0"
+
+  # Project settings
+  PROJECT_NAME: "SQLBot"
+  API_V1_STR: "/api/v1"
+
+  # Logging
+  LOG_LEVEL: "INFO"
+  SQL_DEBUG: "False"
+
+  # Paths
+  BASE_DIR: "/opt/sqlbot"
+  UPLOAD_DIR: "/opt/sqlbot/data/file"
+  MCP_IMAGE_PATH: "/opt/sqlbot/images"
+  EXCEL_PATH: "/opt/sqlbot/data/excel"
+  KNOWLEDGE_BASE_UPLOAD_DIR: "/opt/sqlbot/data/knowledge"
+  LOCAL_MODEL_PATH: "/opt/sqlbot/models"
+
+  # Embedding settings
+  EMBEDDING_ENABLED: "True"
+  DEFAULT_EMBEDDING_MODEL: "shibing624/text2vec-base-chinese"
+
+  # CORS (adjust based on your ingress configuration)
+  BACKEND_CORS_ORIGINS: "http://localhost,https://sqlbot.example.com"

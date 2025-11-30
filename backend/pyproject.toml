@@ -48,6 +48,13 @@ dependencies = [
     "xlrd>=2.0.2",
     "clickhouse-sqlalchemy>=0.3.2",
     "dicttoxml>=1.7.16",
+    # Scheduler dependencies
+    "apscheduler>=3.10.0,<4.0.0",
+    # Knowledge Base document processing
+    "pymupdf>=1.24.0",
+    "pdfplumber>=0.10.0",
+    "python-docx>=1.1.0",
+    "beautifulsoup4>=4.12.0",
     "dmpython==2.5.22; platform_system != 'Darwin'",
     "redshift-connector>=2.1.8",
     "elasticsearch[requests] (>=7.10,<8.0)",

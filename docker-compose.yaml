@@ -1,39 +1,97 @@
+# Docker Compose for local development with local Dockerfile build
 services:
+  # PostgreSQL Database with pgvector
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: sqlbot-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: Password123@pg
+      POSTGRES_DB: sqlbot
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgresql:/var/lib/postgresql/data
+    networks:
+      - sqlbot-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root -d sqlbot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: sqlbot-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis:/data
+    networks:
+      - sqlbot-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # SQLBot Application (built from local Dockerfile)
   sqlbot:
-    image: dataease/sqlbot
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: sqlbot
     restart: always
     privileged: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - sqlbot-network
     ports:
-      - 8000:8000
-      - 8001:8001
+      - "8000:8000"
+      - "8001:8001"
     environment:
       # Database configuration
-      POSTGRES_SERVER: localhost
+      POSTGRES_SERVER: postgres
       POSTGRES_PORT: 5432
       POSTGRES_DB: sqlbot
       POSTGRES_USER: root
       POSTGRES_PASSWORD: Password123@pg
+      # Redis configuration
+      CACHE_TYPE: redis
+      CACHE_REDIS_URL: redis://redis:6379/0
       # Project basic settings
       PROJECT_NAME: "SQLBot"
       DEFAULT_PWD: "SQLBot@123456"
       # MCP settings
-      SERVER_IMAGE_HOST: http://YOUR_SERVE_IP:MCP_PORT/images/
+      SERVER_IMAGE_HOST: http://YOUR_SERVE_IP:8001/images/
       # Auth & Security
       SECRET_KEY: y5txe1mRmS_JpOrUzFzHEu-kIQn3lf7ll0AOv9DQh0s
       # CORS settings
-      BACKEND_CORS_ORIGINS: "http://localhost,http://localhost:5173,https://localhost,https://localhost:5173"
+      BACKEND_CORS_ORIGINS: "http://localhost,http://localhost:5173,https://localhost,https://localhost:5173,http://localhost:8000"
       # Logging
       LOG_LEVEL: "INFO"
-      SQL_DEBUG: False
+      SQL_DEBUG: "False"
+      # Knowledge Base settings
+      KNOWLEDGE_BASE_UPLOAD_DIR: /opt/sqlbot/data/knowledge
     volumes:
       - ./data/sqlbot/excel:/opt/sqlbot/data/excel
       - ./data/sqlbot/file:/opt/sqlbot/data/file
       - ./data/sqlbot/images:/opt/sqlbot/images
       - ./data/sqlbot/logs:/opt/sqlbot/app/logs
-      - ./data/postgresql:/var/lib/postgresql/data
+      - ./data/sqlbot/knowledge:/opt/sqlbot/data/knowledge
+      - ./data/sqlbot/models:/opt/sqlbot/models
 
 networks:
   sqlbot-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

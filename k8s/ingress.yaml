@@ -1,0 +1,72 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sqlbot-ingress
+  namespace: sqlbot
+  labels:
+    app.kubernetes.io/name: sqlbot
+    app.kubernetes.io/component: ingress
+  annotations:
+    # Nginx Ingress Controller annotations
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/websocket-services: "sqlbot-service"
+    # Enable SSL redirect (uncomment when using TLS)
+    # nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # Rate limiting
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+    nginx.ingress.kubernetes.io/limit-connections: "50"
+spec:
+  ingressClassName: nginx # Adjust based on your ingress controller
+  # Uncomment and configure TLS for production
+  # tls:
+  #   - hosts:
+  #       - sqlbot.example.com
+  #     secretName: sqlbot-tls
+  rules:
+    - host: sqlbot.example.com # Replace with your domain
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: sqlbot-service
+                port:
+                  number: 8000
+          - path: /mcp
+            pathType: Prefix
+            backend:
+              service:
+                name: sqlbot-mcp-service
+                port:
+                  number: 8001
+---
+# Optional: Ingress for MCP service on separate subdomain
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sqlbot-mcp-ingress
+  namespace: sqlbot
+  labels:
+    app.kubernetes.io/name: sqlbot
+    app.kubernetes.io/component: mcp-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: mcp.sqlbot.example.com # Replace with your domain
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: sqlbot-mcp-service
+                port:
+                  number: 8001

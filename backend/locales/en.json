@@ -114,5 +114,37 @@
   },
   "i18n_excel_import": {
     "col_num_not_match": "Number of columns in Excel does not match"
+  },
+  "i18n_scheduler": {
+    "task_not_found": "Scheduled task not found",
+    "task_name_required": "Task name is required",
+    "trigger_type_required": "Trigger type is required",
+    "action_type_required": "Action type is required",
+    "cron_expression_required": "Cron expression is required for cron trigger",
+    "interval_required": "Interval seconds is required for interval trigger",
+    "run_date_required": "Run date is required for date trigger",
+    "action_config_required": "Action configuration is required",
+    "task_created": "Scheduled task created successfully",
+    "task_updated": "Scheduled task updated successfully",
+    "task_deleted": "Scheduled task deleted successfully",
+    "task_enabled": "Scheduled task enabled successfully",
+    "task_disabled": "Scheduled task disabled successfully",
+    "task_executed": "Scheduled task executed successfully",
+    "invalid_cron_expression": "Invalid cron expression"
+  },
+  "i18n_knowledge_base": {
+    "kb_not_found": "Knowledge base not found",
+    "document_not_found": "Document not found",
+    "kb_name_required": "Knowledge base name is required",
+    "file_required": "File is required",
+    "unsupported_file_type": "Unsupported file type",
+    "kb_created": "Knowledge base created successfully",
+    "kb_updated": "Knowledge base updated successfully",
+    "kb_deleted": "Knowledge base deleted successfully",
+    "document_uploaded": "Document uploaded successfully",
+    "document_deleted": "Document deleted successfully",
+    "document_processing": "Document is being processed",
+    "chunk_size_invalid": "Chunk size must be between 100 and 4000",
+    "chunk_overlap_invalid": "Chunk overlap must be less than chunk size"
   }
 }
